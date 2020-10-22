@@ -113,8 +113,17 @@ func Parse(in *MountParams) (*MountConfig, error) {
 	if _, ok := attrib["secrets"]; !ok {
 		return nil, errors.New("missing required 'secrets' attribute")
 	}
+	// TODO: Consider using the KeyToPath resource definition
 	if err := yaml.Unmarshal([]byte(attrib["secrets"]), &out.Secrets); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal secrets attribute: %v", err)
+	}
+
+	// TODO: Consider using the volumeutil.NewAtomicWriter so that path joining
+	// on this driver matches k8s.
+	for i := range out.Secrets {
+		if err := ValidateFilename(out.Secrets[i].FileName); err != nil {
+			return nil, err
+		}
 	}
 
 	return out, nil
